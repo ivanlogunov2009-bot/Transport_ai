@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#023e8a">
+<title>Умная авиация — цифровая платформа речного транспорта</title>
+<style>
+:root {
+  --bg: #eef4fa; --bg-card: #fff;
+  --bg-header: linear-gradient(135deg, #023e8a, #0096c7);
+  --text: #1a2b3c; --text-muted: #5a6b7a;
+  --primary: #023e8a; --primary-hover: #0096c7;
+  --accent: #ffd166; --accent-hover: #ffb703;
+  --border: #d6ebf7; --border-soft: #eaf4fb;
+  --shadow: 0 5px 18px rgba(2,62,138,.08);
+  --shadow-hover: 0 10px 28px rgba(2,62,138,.16);
+  --ok-bg: #d1f4e0; --ok-t: #0a7a43;
+  --warn-bg: #ffe5cc; --warn-t: #b35c00;
+  --danger-bg: #ffd6d6; --danger-t: #b30000;
+  --info-bg: #d6ebf7; --info-t: #023e8a;
+}
+body.dark {
+  --bg: #0d1b2a; --bg-card: #14273a;
+  --bg-header: linear-gradient(135deg, #01142e, #023e8a);
+  --text: #e0ecf6; --text-muted: #8ba9c4;
+  --primary: #00b4d8; --primary-hover: #48cae4;
+  --border: #1e3a55; --border-soft: #1a2f45;
+  --shadow: 0 5px 18px rgba(0,0,0,.4); --shadow-hover: 0 10px 28px rgba(0,0,0,.55);
+  --ok-bg: #0a3d24; --ok-t: #4ade80;
+  --warn-bg: #4a2600; --warn-t: #fbbf24;
+  --danger-bg: #4a1010; --danger-t: #f87171;
+  --info-bg: #0a2540; --info-t: #48cae4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Segoe UI','Inter',Arial,sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; min-height: 100vh; transition: background .3s,color .3s; }
+
+/* AUTH */
+.auth-screen { position: fixed; inset: 0; z-index: 2000; background: linear-gradient(135deg,#023e8a,#0096c7); display: grid; place-items: center; padding: 20px; }
+.auth-screen.hidden { display: none; }
+.auth-card { background: var(--bg-card); color: var(--text); border-radius: 20px; padding: 40px 32px; max-width: 420px; width: 100%; box-shadow: 0 30px 80px rgba(0,0,0,.35); animation: modalIn .45s cubic-bezier(.4,0,.2,1); }
+.auth-logo { font-size: 3rem; text-align: center; }
+.auth-card h1 { text-align: center; color: var(--primary); font-size: 1.5rem; margin-top: 8px; }
+.auth-card > .muted { text-align: center; margin-bottom: 22px; }
+.auth-tabs { display: flex; gap: 8px; margin-bottom: 20px; background: var(--border-soft); border-radius: 10px; padding: 5px; }
+.auth-tab { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: .25s; }
+.auth-tab.active { background: var(--primary); color: #fff; }
+.auth-form { display: none; }
+.auth-form.active { display: block; animation: fade .4s; }
+
+/* HEADER */
+header { background: var(--bg-header); color: #fff; padding: 18px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: 0 4px 15px rgba(2,62,138,.25); position: sticky; top: 0; z-index: 100; }
+header h1 { font-size: 1.45rem; display: flex; align-items: center; gap: 8px; }
+header .subtitle { font-size: .82rem; opacity: .9; margin-top: 2px; }
+.header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.role-switch { display: flex; gap: 8px; flex-wrap: wrap; }
+.role-switch button { padding: 9px 16px; border: 2px solid rgba(255,255,255,.5); background: transparent; color: #fff; border-radius: 25px; cursor: pointer; font-size: .85rem; font-weight: 600; transition: .25s; }
+.role-switch button:hover { background: rgba(255,255,255,.15); transform: translateY(-2px); }
+.role-switch button.active { background: var(--accent); color: var(--primary); border-color: var(--accent); box-shadow: 0 4px 12px rgba(255,209,102,.4); }
+.user-menu { display: flex; gap: 8px; align-items: center; }
+.theme-toggle, .user-btn { background: rgba(255,255,255,.15); border: 2px solid rgba(255,255,255,.4); color: #fff; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.05rem; transition: .25s; display: grid; place-items: center; font-weight: bold; }
+.theme-toggle:hover, .user-btn:hover { background: rgba(255,255,255,.3); }
+
+/* LAYOUT */
+.container { max-width: 1240px; margin: 0 auto; padding: 25px 20px 60px; }
+.role-panel { display: none; }
+.role-panel.active { display: block; animation: fade .45s cubic-bezier(.4,0,.2,1); }
+@keyframes fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes modalIn { from { opacity: 0; transform: scale(.9) translateY(20px); } to { opacity: 1; transform: none; } }
+h2 { font-size: 1.35rem; color: var(--primary); margin: 25px 0 15px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+h3 { font-size: 1.05rem; color: var(--primary-hover); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 20px; }
+.grid-2 { grid-template-columns: repeat(auto-fit,minmax(340px,1fr)); }
+.card { background: var(--bg-card); border-radius: 14px; padding: 22px; box-shadow: var(--shadow); transition: box-shadow .3s; }
+.card:hover { box-shadow: var(--shadow-hover); }
+
+/* KPI */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 15px; margin-bottom: 20px; }
+.kpi { background: var(--bg-card); border-radius: 14px; padding: 18px; box-shadow: var(--shadow); text-align: center; transition: transform .3s; position: relative; overflow: hidden; }
+.kpi:hover { transform: translateY(-3px); }
+.kpi::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--primary-hover); opacity: .7; }
+.kpi.warn::before { background: #e85d04; }
+.kpi.danger::before { background: #d00000; }
+.kpi .num { font-size: 1.85rem; font-weight: bold; color: var(--primary-hover); }
+.kpi .label { font-size: .78rem; color: var(--text-muted); margin-top: 4px; }
+.kpi.warn .num { color: #e85d04; }
+.kpi.danger .num { color: #d00000; }
+.kpi .num.flash { animation: flash .6s; }
+@keyframes flash { 0% { transform: scale(1); } 50% { transform: scale(1.2); color: var(--accent); } 100% { transform: scale(1); } }
+
+/* MAP */
+.map { position: relative; background: linear-gradient(160deg,#cde9f7,#a8d8ee); border-radius: 14px; height: 340px; overflow: hidden; box-shadow: inset 0 0 40px rgba(2,62,138,.15); }
+.map::before { content: ""; position: absolute; inset: 0; background-image: repeating-linear-gradient(0deg,transparent 0 39px,rgba(2,62,138,.08) 39px 40px), repeating-linear-gradient(90deg,transparent 0 39px,rgba(2,62,138,.08) 39px 40px); pointer-events: none; }
+.ship { position: absolute; font-size: 1.5rem; transform: translate(-50%,-50%); cursor: pointer; transition: left 2.8s linear, top 2.8s linear, transform .25s; filter: drop-shadow(0 2px 3px rgba(0,0,0,.3)); user-select: none; z-index: 2; }
+.ship:hover { transform: translate(-50%,-50%) scale(1.3); z-index: 5; }
+.ship.conflict { animation: pulse 1.2s infinite; }
+@keyframes pulse { 0%,100% { filter: drop-shadow(0 0 4px #d00000); } 50% { filter: drop-shadow(0 0 16px #ff0000); } }
+.map-legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 12px; font-size: .85rem; color: var(--text-muted); }
+.map-legend span::before { content: "●"; margin-right: 5px; }
+.map-legend .ok::before { color: var(--ok-t); }
+.map-legend .conf::before { color: var(--danger-t); }
+.map-legend .queue::before { color: var(--warn-t); }
+
+/* TABLES */
+.table-wrap { overflow-x: auto; border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; min-width: 480px; }
+thead { background: var(--primary); color: #fff; }
+th, td { padding: 11px 13px; text-align: left; font-size: .9rem; }
+th { font-weight: 600; }
+tbody tr { border-bottom: 1px solid var(--border-soft); transition: background .2s; }
+tbody tr:hover { background: rgba(0,150,199,.06); }
+
+.badge { display: inline-block; padding: 3px 11px; border-radius: 20px; font-size: .78rem; font-weight: 600; white-space: nowrap; }
+.badge.ok { background: var(--ok-bg); color: var(--ok-t); }
+.badge.warn { background: var(--warn-bg); color: var(--warn-t); }
+.badge.danger { background: var(--danger-bg); color: var(--danger-t); }
+.badge.info { background: var(--info-bg); color: var(--info-t); }
+
+/* FORMS */
+input, select, textarea { width: 100%; padding: 10px 12px; border: 2px solid var(--border); border-radius: 9px; font-size: .92rem; font-family: inherit; margin-bottom: 12px; background: var(--bg-card); color: var(--text); transition: border-color .2s,box-shadow .2s; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-hover); box-shadow: 0 0 0 3px rgba(0,150,199,.15); }
+label { font-size: .83rem; font-weight: 600; color: var(--primary); display: block; margin-bottom: 5px; }
+button.action { padding: 11px 22px; background: var(--primary); color: #fff; border: none; border-radius: 9px; font-size: .95rem; font-weight: bold; cursor: pointer; transition: all .25s; }
+button.action:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,150,199,.3); }
+button.action:disabled { opacity: .5; cursor: not-allowed; }
+button.action.small { padding: 6px 12px; font-size: .8rem; }
+button.action.ghost { background: transparent; color: var(--primary); border: 2px solid var(--border); }
+button.action.ghost:hover:not(:disabled) { background: var(--info-bg); border-color: var(--primary-hover); }
+
+/* AI BOX */
+.ai-box { background: linear-gradient(135deg,rgba(0,180,216,.12),rgba(0,150,199,.06)); border-left: 4px solid var(--primary-hover); border-radius: 10px; padding: 15px 18px; margin-top: 15px; }
+.ai-box h4 { color: var(--primary); font-size: .95rem; margin-bottom: 8px; }
+.ai-box ul { margin-left: 18px; font-size: .88rem; }
+.ai-box li { margin-bottom: 6px; }
+.ai-box li b { color: var(--primary-hover); }
+
+/* CHAT */
+.chat { background: rgba(0,150,199,.06); border-radius: 10px; padding: 12px; height: 200px; overflow-y: auto; font-size: .88rem; margin-bottom: 10px; }
+.chat .msg { margin-bottom: 8px; }
+.chat .msg b { color: var(--primary-hover); }
+.chat .msg.mine { text-align: right; }
+.chat .msg.mine b { color: var(--accent); }
+.chat-input-row { display: flex; gap: 8px; }
+.chat-input-row input { margin-bottom: 0; }
+
+/* NOTICES */
+.notice { padding: 12px 16px; border-radius: 10px; margin-bottom: 10px; font-size: .88rem; animation: slideIn .4s; }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+.notice.warn { background: var(--warn-bg); color: var(--warn-t); border-left: 4px solid var(--warn-t); }
+.notice.danger { background: var(--danger-bg); color: var(--danger-t); border-left: 4px solid var(--danger-t); }
+.notice.info { background: var(--info-bg); color: var(--info-t); border-left: 4px solid var(--info-t); }
+.notice.ok { background: var(--ok-bg); color: var(--ok-t); border-left: 4px solid var(--ok-t); }
+
+/* TOAST */
+#toast-container { position: fixed; top: 90px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; max-width: 340px; }
+.toast { background: var(--bg-card); color: var(--text); padding: 14px 18px; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.18); border-left: 4px solid var(--primary-hover); animation: toastIn .35s cubic-bezier(.4,0,.2,1); font-size: .9rem; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.toast.ok { border-left-color: var(--ok-t); }
+.toast.warn { border-left-color: var(--warn-t); }
+.toast.danger { border-left-color: var(--danger-t); }
+.toast .close { cursor: pointer; opacity: .5; font-size: 1.1rem; }
+.toast .close:hover { opacity: 1; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+.toast.hide { animation: toastOut .3s forwards; }
+@keyframes toastOut { to { opacity: 0; transform: translateX(40px); } }
+
+/* MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(2,62,138,.6); backdrop-filter: blur(4px); display: none; place-items: center; z-index: 999; padding: 20px; }
+.modal-overlay.active { display: grid; animation: fade .3s; }
+.modal { background: var(--bg-card); border-radius: 16px; max-width: 460px; width: 100%; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,.35); animation: modalIn .35s cubic-bezier(.4,0,.2,1); }
+.modal h3 { color: var(--primary); margin-bottom: 15px; font-size: 1.2rem; }
+.modal .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-soft); font-size: .92rem; }
+.modal .row:last-of-type { border-bottom: none; }
+.modal .row b { color: var(--primary); }
+.qr { margin: 18px auto; width: 140px; height: 140px; background: repeating-linear-gradient(0deg,var(--primary) 0 4px,transparent 4px 8px), repeating-linear-gradient(90deg,var(--primary) 0 4px,transparent 4px 8px); border-radius: 10px; display: grid; place-items: center; }
+
+/* CHART */
+.chart-wrap { background: rgba(0,150,199,.05); border-radius: 10px; padding: 12px; margin-top: 12px; }
+canvas { width: 100%; height: 140px; display: block; }
+
+/* FILTER */
+.filter-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; align-items: center; }
+.filter-bar input, .filter-bar select { margin-bottom: 0; width: auto; min-width: 140px; flex: 1; }
+
+/* CAPACITY */
+.capacity-bar { background: var(--border); border-radius: 20px; height: 22px; overflow: hidden; margin-top: 8px; }
+.capacity-fill { height: 100%; background: linear-gradient(90deg,#00b4d8,#48cae4); border-radius: 20px; transition: width .8s; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; color: #fff; font-size: .75rem; font-weight: bold; }
+.capacity-fill.high { background: linear-gradient(90deg,#e85d04,#f48c06); }
+.capacity-fill.full { background: linear-gradient(90deg,#d00000,#e85d04); }
+.progress { background: var(--border); border-radius: 10px; height: 8px; overflow: hidden; margin-top: 10px; }
+.progress-fill { height: 100%; background: var(--primary-hover); transition: width 1s; }
+
+/* FOOTER */
+footer { background: var(--primary); color: #cde9f7; text-align: center; padding: 25px 20px; font-size: .85rem; margin-top: 40px; }
+.muted { color: var(--text-muted); font-size: .85rem; }
+.mt { margin-top: 18px; }
+.flex { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 6px; animation: livePulse 1.5s infinite; }
+@keyframes livePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,.6); } 50% { box-shadow: 0 0 0 6px rgba(34,197,94,0); } }
+
+/* ============ ЦЕНТР СВЯЗИ С ИИ ============ */
+.comm-layout { display: grid; grid-template-columns: 260px 1fr; gap: 16px; min-height: 540px; }
+@media (max-width: 860px) { .comm-layout { grid-template-columns: 1fr; } }
+.comm-sidebar { background: rgba(0,150,199,.06); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; max-height: 580px; }
+.comm-search input { margin-bottom: 0; padding: 8px 12px; font-size: .85rem; }
+.comm-channels { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.comm-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; cursor: pointer; transition: .2s; border: 2px solid transparent; }
+.comm-item:hover { background: rgba(0,150,199,.12); }
+.comm-item.active { background: var(--bg-card); border-color: var(--primary-hover); box-shadow: 0 3px 10px rgba(0,150,199,.15); }
+.comm-item .avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 1rem; color: #fff; background: var(--primary); flex-shrink: 0; position: relative; }
+.comm-item .avatar .dot { position: absolute; bottom: -1px; right: -1px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--bg-card); }
+.comm-item .avatar .dot.online { background: #22c55e; }
+.comm-item .avatar .dot.busy { background: #e85d04; }
+.comm-item .avatar .dot.offline { background: #94a3b8; }
+.comm-item .info { flex: 1; min-width: 0; }
+.comm-item .name { font-size: .88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.comm-item .last { font-size: .74rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.comm-item .unread { background: #d00000; color: #fff; font-size: .68rem; font-weight: bold; padding: 2px 7px; border-radius: 10px; min-width: 20px; text-align: center; }
+.comm-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.comm-header { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: rgba(0,150,199,.06); border-radius: 12px; }
+.comm-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--primary); color: #fff; display: grid; place-items: center; font-weight: bold; font-size: 1.1rem; }
+.comm-info { flex: 1; min-width: 0; }
+.comm-name { font-weight: 700; color: var(--primary); font-size: .95rem; }
+.comm-status { font-size: .8rem; }
+.comm-actions { display: flex; gap: 6px; }
+.chat { flex: 1; min-height: 240px; max-height: 340px; overflow-y: auto; background: rgba(0,150,199,.05); border-radius: 12px; padding: 14px; font-size: .9rem; display: flex; flex-direction: column; gap: 8px; }
+.chat .empty-chat { text-align: center; color: var(--text-muted); font-style: italic; margin: auto; font-size: .88rem; }
+.msg-wrap { display: flex; flex-direction: column; max-width: 78%; animation: fade .3s; }
+.msg-wrap.mine { align-self: flex-end; align-items: flex-end; }
+.msg-wrap.theirs { align-self: flex-start; }
+.msg-meta { font-size: .7rem; color: var(--text-muted); margin-bottom: 3px; }
+.msg-bubble { padding: 9px 13px; border-radius: 14px; background: var(--bg-card); border: 1px solid var(--border-soft); line-height: 1.4; word-wrap: break-word; }
+.msg-wrap.mine .msg-bubble { background: var(--primary); color: #fff; border-color: var(--primary); }
+.msg-bubble.prio-important { border-left: 4px solid #e85d04; }
+.msg-bubble.prio-urgent { border-left: 4px solid #d00000; animation: pulseUrgent 1.6s infinite; }
+@keyframes pulseUrgent { 0%,100% { box-shadow: 0 0 0 0 rgba(208,0,0,.4); } 50% { box-shadow: 0 0 0 6px rgba(208,0,0,0); } }
+.msg-ticks { font-size: .72rem; color: var(--text-muted); margin-top: 3px; }
+.msg-wrap.mine .msg-ticks { color: rgba(255,255,255,.8); }
+.quick-templates { display: flex; gap: 6px; flex-wrap: wrap; }
+.tpl-btn { background: var(--bg-card); border: 2px solid var(--border); color: var(--primary); padding: 6px 12px; border-radius: 20px; font-size: .78rem; cursor: pointer; transition: .2s; font-weight: 600; }
+.tpl-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); transform: translateY(-2px); }
+.priority-bar { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-size: .82rem; }
+.prio-label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.prio-label input { width: auto; margin: 0; }
+.prio { padding: 3px 10px; border-radius: 12px; font-weight: 600; font-size: .75rem; }
+.prio.normal { background: var(--info-bg); color: var(--info-t); }
+.prio.important { background: var(--warn-bg); color: var(--warn-t); }
+.prio.urgent { background: var(--danger-bg); color: var(--danger-t); }
+
+/* ADAPTIVE */
+@media (max-width: 720px) {
+  header { padding: 14px 16px; }
+  header h1 { font-size: 1.15rem; }
+  .role-switch button { padding: 7px 11px; font-size: .75rem; }
+  .container { padding: 18px 14px 40px; }
+  .card { padding: 16px; }
+  .kpi .num { font-size: 1.5rem; }
+  h2 { font-size: 1.15rem; }
+  .map { height: 260px; }
+  #toast-container { top: auto; bottom: 20px; right: 14px; left: 14px; max-width: none; }
+  .auth-card { padding: 30px 22px; }
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">🚤</div>
+    <h1>Умная авиация</h1>
+    <p class="muted">Единая цифровая платформа маломерного речного транспорта</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">Вход</button>
+      <button class="auth-tab" data-tab="register">Регистрация</button>
+    </div>
+    <form id="loginForm" class="auth-form active">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="user@example.com" required>
+      <label>Пароль</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" required>
+      <label>Роль</label>
+      <select id="loginRole">
+        <option value="dispatcher">Диспетчер</option>
+        <option value="captain">Капитан</option>
+        <option value="passenger" selected>Пассажир</option>
+        <option value="cargo">Грузоотправитель</option>
+      </select>
+      <button type="submit" class="action" style="width:100%">Войти</button>
+      <p class="muted mt" style="text-align:center;">Демо: любой email + пароль от 4 символов</p>
+    </form>
+    <form id="registerForm" class="auth-form">
+      <label>Имя</label>
+      <input type="text" id="regName" placeholder="Иван Иванов" required>
+      <label>Email</label>
+      <input type="email" id="regEmail" placeholder="user@example.com" required>
+      <label>Пароль</label>
+      <input type="password" id="regPassword" placeholder="Минимум 4 символа" required minlength="4">
+      <label>Роль</label>
+      <select id="regRole">
+        <option value="dispatcher">Диспетчер</option>
+        <option value="captain">Капитан</option>
+        <option value="passenger" selected>Пассажир</option>
+        <option value="cargo">Грузоотправитель</option>
+      </select>
+      <button type="submit" class="action" style="width:100%">Зарегистрироваться</button>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app" style="display:none;">
+<header>
+  <div>
+    <h1>🚤 Умная авиация <span class="live-dot"></span></h1>
+    <div class="subtitle">Единая цифровая платформа маломерного речного транспорта</div>
+  </div>
+  <div class="header-right">
+    <div class="role-switch" id="roleSwitch">
+      <button data-role="dispatcher" class="active">Диспетчер</button>
+      <button data-role="captain">Капитан</button>
+      <button data-role="passenger">Пассажир</button>
+      <button data-role="cargo">Грузоотправитель</button>
+    </div>
+    <div class="user-menu">
+      <button class="theme-toggle" id="themeToggle" title="Тема">🌙</button>
+      <button class="user-btn" id="userBtn" title="Выйти"><span id="userInitial">?</span></button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ДИСПЕТЧЕР -->
+  <section class="role-panel active" id="dispatcher">
+    <div class="kpi-row">
+      <div class="kpi"><div class="num" id="kpiShips">0</div><div class="label">Судов на воде</div></div>
+      <div class="kpi warn"><div class="num" id="kpiConflicts">0</div><div class="label">Конфликта курса</div></div>
+      <div class="kpi warn"><div class="num" id="kpiQueue">0</div><div class="label">Очередь на шлюз</div></div>
+      <div class="kpi danger"><div class="num" id="kpiAlerts">0</div><div class="label">Аварийных ситуаций</div></div>
+    </div>
+
+    <h2>🗺️ Карта отслеживания судов</h2>
+    <div class="card">
+      <div class="map" id="dispatcherMap"></div>
+      <div class="map-legend">
+        <span class="ok">В норме</span>
+        <span class="conf">Конфликт курса</span>
+        <span class="queue">Ожидание шлюза</span>
+      </div>
+      <p class="muted mt">💡 Кликните по судну, чтобы увидеть детали.</p>
+    </div>
+
+    <div class="grid grid-2 mt">
+      <div class="card">
+        <h3>📊 Мониторинг курса и скорости</h3>
+        <div class="filter-bar">
+          <input type="text" id="monitorSearch" placeholder="🔍 Поиск судна...">
+          <select id="monitorStatus">
+            <option value="">Все статусы</option>
+            <option value="ok">В норме</option>
+            <option value="conflict">Конфликт</option>
+            <option value="queue">Ожидание</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Судно</th><th>Курс</th><th>Скорость</th><th>Статус</th></tr></thead>
+            <tbody id="monitorTable"></tbody>
+          </table>
+        </div>
+        <div class="chart-wrap">
+          <div class="muted" style="margin-bottom:6px;">Скорость флагмана «Волна-3» (км/ч)</div>
+          <canvas id="speedChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>⚠️ Карта конфликтов</h3>
+        <table>
+          <thead><tr><th>Судно A</th><th>Судно B</th><th>Дистанция</th><th>Риск</th></tr></thead>
+          <tbody id="conflictTable"></tbody>
+        </table>
+        <div class="ai-box">
+          <h4>🤖 Рекомендация ИИ</h4>
+          <ul id="conflictAIList"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-2 mt">
+      <div class="card">
+        <h3>📈 Заполняемость судов</h3>
+        <div id="capacityList"></div>
+      </div>
+      <div class="card">
+        <h3>🌤️ Прогноз погоды</h3>
+        <table>
+          <thead><tr><th>Время</th><th>Ветер</th><th>Волна</th><th>Видимость</th></tr></thead>
+          <tbody>
+            <tr><td>Сейчас</td><td>4 м/с, СЗ</td><td>0.3 м</td><td>10 км</td></tr>
+            <tr><td>+3 часа</td><td>7 м/с, С</td><td>0.6 м</td><td>8 км</td></tr>
+            <tr><td>+6 часов</td><td>11 м/с, С</td><td>1.1 м</td><td>5 км</td></tr>
+            <tr><td>+12 часов</td><td>6 м/с, СВ</td><td>0.5 м</td><td>9 км</td></tr>
+          </tbody>
+        </table>
+        <div class="notice warn mt">⚠️ С 16:00 ожидается усиление ветра до 11 м/с.</div>
+      </div>
+    </div>
+
+    <!-- 🤖 ЦЕНТР СВЯЗИ С ИИ-КАПИТАНАМИ -->
+    <div class="card mt">
+      <h3>🤖 Центр связи с ИИ-капитанами
+        <span class="live-dot"></span>
+        <span class="muted" style="margin-left:auto;font-weight:400;font-size:.8rem;">
+          Модель: <b id="aiModel">gpt-4o-mini</b> ·
+          Онлайн: <b id="onlineCount">0</b>/<b id="totalCount">0</b>
+        </span>
+      </h3>
+
+      <div class="comm-layout">
+        <aside class="comm-sidebar">
+          <div class="comm-search">
+            <input type="text" id="captainSearch" placeholder="🔍 Найти судно...">
+          </div>
+          <div class="comm-channels" id="captainList"></div>
+        </aside>
+
+        <main class="comm-main">
+          <div class="comm-header">
+            <div class="comm-avatar" id="commAvatar">—</div>
+            <div class="comm-info">
+              <div class="comm-name" id="commName">Выберите судно</div>
+              <div class="comm-status muted" id="commStatus">Начните диалог</div>
+            </div>
+            <div class="comm-actions">
+              <button class="action small ghost" onclick="AI.broadcast()" title="Всем">📢 Всем</button>
+              <button class="action small ghost" onclick="AI.openSettings()" title="API-ключ">⚙️</button>
+            </div>
+          </div>
+
+          <div class="chat" id="chatBox"></div>
+          <div class="quick-templates" id="quickTemplates"></div>
+
+          <div class="priority-bar">
+            <label class="prio-label"><input type="radio" name="priority" value="normal" checked><span class="prio normal">Обычное</span></label>
+            <label class="prio-label"><input type="radio" name="priority" value="important"><span class="prio important">Важное</span></label>
+            <label class="prio-label"><input type="radio" name="priority" value="urgent"><span class="prio urgent">Экстренное</span></label>
+            <label class="prio-label" style="margin-left:auto;">
+              <input type="checkbox" id="aiAutoReply" checked style="width:auto;margin:0;">
+              <span style="font-size:.8rem;">ИИ отвечает</span>
+            </label>
+          </div>
+
+          <div class="chat-input-row">
+            <input type="text" id="chatInput" placeholder="Написать капитану...">
+            <button class="action small" onclick="AI.send()">➤</button>
+          </div>
+
+          <div id="aiTyping" class="muted" style="display:none;font-size:.8rem;margin-top:6px;">
+            <span class="live-dot"></span> Капитан печатает…
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- КАПИТАН -->
+  <section class="role-panel" id="captain">
+    <h2>🧭 Проложенный маршрут</h2>
+    <div class="card">
+      <div class="map" id="captainMap"></div>
+      <div class="map-legend">
+        <span class="ok">Ваше судно</span>
+        <span class="conf">Пересечение курса</span>
+      </div>
+      <p class="muted mt">Маршрут: Причал №4 → Шлюз №2 → Причал №7. Время: <b>1 ч 20 мин</b>. Пройдено: <b id="captainProgress">42%</b>.</p>
+      <div class="progress"><div id="captainProgressBar" class="progress-fill" style="width:42%"></div></div>
+    </div>
+
+    <div class="grid grid-2 mt">
+      <div class="card">
+        <h3>📈 Показатели судна</h3>
+        <table><tbody id="captainStats"></tbody></table>
+      </div>
+      <div class="card">
+        <h3>👥 Заполняемость судна</h3>
+        <div id="captainCapacity"></div>
+      </div>
+    </div>
+
+    <div class="grid grid-2 mt">
+      <div class="card">
+        <h3>🚨 Уведомления</h3>
+        <div id="captainNotices"></div>
+      </div>
+      <div class="card">
+        <h3>🤖 Рекомендация ИИ</h3>
+        <div class="ai-box">
+          <h4>Действие на ближайшие 10 минут</h4>
+          <ul id="captainAIList"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ПАССАЖИР -->
+  <section class="role-panel" id="passenger">
+    <h2>🎫 Мои билеты</h2>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Рейс</th><th>Маршрут</th><th>Дата</th><th>Время</th><th>Статус</th><th>Действие</th></tr></thead>
+          <tbody id="myTickets"></tbody>
+        </table>
+      </div>
+      <p class="muted mt" id="noTickets">У вас пока нет билетов. Купите первый в расписании ниже 👇</p>
+    </div>
+
+    <h2 class="mt">📅 Расписание рейсов</h2>
+    <div class="card">
+      <div class="filter-bar">
+        <input type="text" id="schedSearch" placeholder="🔍 Поиск по маршруту...">
+        <select id="schedSort">
+          <option value="dep">Сортировка: по времени</option>
+          <option value="seats">Сортировка: по местам</option>
+          <option value="price">Сортировка: по цене</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Рейс</th><th>Откуда</th><th>Куда</th><th>Отправление</th><th>Прибытие</th><th>Мест</th><th>Цена</th><th></th></tr>
+          </thead>
+          <tbody id="scheduleBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <h2 class="mt">🔔 Уведомления</h2>
+    <div class="card" id="passengerNotices">
+      <div class="notice warn">Рейс R-208 задерживается на 20 минут.</div>
+      <div class="notice info">Напоминание: рейс R-204 завтра в 10:30.</div>
+    </div>
+  </section>
+
+  <!-- ГРУЗООТПРАВИТЕЛЬ -->
+  <section class="role-panel" id="cargo">
+    <h2>📦 Заявка на перевозку груза</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Новая заявка</h3>
+        <label>Тип груза</label>
+        <select id="cargoType">
+          <option>Стройматериалы</option>
+          <option>Продукты питания</option>
+          <option>Оборудование</option>
+          <option>Контейнеры</option>
+          <option>Опасный груз</option>
+        </select>
+        <label>Вес (тонн)</label>
+        <input type="number" id="cargoWeight" placeholder="Например: 12" min="0.1" step="0.1">
+        <label>Откуда</label>
+        <input type="text" id="cargoFrom" placeholder="Причал №4">
+        <label>Куда</label>
+        <input type="text" id="cargoTo" placeholder="Причал №7">
+        <label>Дата</label>
+        <input type="date" id="cargoDate">
+        <label>Телефон</label>
+        <input type="tel" id="cargoPhone" placeholder="+7 (___) ___-__-__">
+        <button class="action" onclick="App.submitCargo()">Отправить заявку</button>
+      </div>
+
+      <div class="card">
+        <h3>📍 Отслеживание груза</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Заявка</th><th>Груз</th><th>Судно</th><th>Статус</th><th>Прогресс</th></tr></thead>
+            <tbody id="cargoTrackTable"></tbody>
+          </table>
+        </div>
+        <div class="ai-box mt">
+          <h4>🤖 Прогноз ИИ</h4>
+          <ul id="cargoAIList"></ul>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="mt">📋 Мои заявки</h2>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>№</th><th>Тип</th><th>Вес</th><th>Маршрут</th><th>Дата</th><th>Статус</th></tr></thead>
+          <tbody id="myCargoTable"></tbody>
+        </table>
+      </div>
+      <p class="muted mt" id="noCargo">Заявок пока нет.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>© 2026 Умная авиация · Единая цифровая платформа маломерного речного транспорта</footer>
+</div>
+
+<div id="toast-container"></div>
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalContent"></div></div>
+
+<!-- Модалка настроек OpenAI -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <h3>⚙️ Настройки OpenAI API</h3>
+    <p class="muted">Ключ хранится только в вашем браузере (localStorage). Без ключа работает демо-режим.</p>
+    <label>API Key (sk-...)</label>
+    <input type="password" id="apiKeyInput" placeholder="sk-...">
+    <label>Модель</label>
+    <select id="apiModelSelect">
+      <option value="gpt-4o-mini">gpt-4o-mini (быстро, дёшево)</option>
+      <option value="gpt-4o">gpt-4o (умнее)</option>
+      <option value="gpt-3.5-turbo">gpt-3.5-turbo (старая)</option>
+    </select>
+    <div class="flex mt" style="justify-content:flex-end;gap:8px;">
+      <button class="action small ghost" onclick="AI.closeSettings()">Отмена</button>
+      <button class="action small" onclick="AI.saveSettings()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Утилиты
+============================================================ */
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k, def) { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; } },
+  set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+};
+function toast(msg, type = "info", duration = 3500) {
+  const c = $("toast-container");
+  const el = document.createElement("div");
+  el.className = "toast " + type;
+  el.innerHTML = `<span>${msg}</span><span class="close">✕</span>`;
+  el.querySelector(".close").onclick = () => el.remove();
+  c.appendChild(el);
+  setTimeout(() => { el.classList.add("hide"); setTimeout(() => el.remove(), 300); }, duration);
+}
+function closeModal() { $("modalOverlay").classList.remove("active"); }
+$("modalOverlay").onclick = (e) => { if (e.target.id === "modalOverlay") closeModal(); };
+
+/* ============================================================
+   Тема
+============================================================ */
+const savedTheme = store.get("theme", "light");
+if (savedTheme === "dark") document.body.classList.add("dark");
+$("themeToggle").textContent = savedTheme === "dark" ? "☀️" : "🌙";
+$("themeToggle").onclick = () => {
+  document.body.classList.toggle("dark");
+  const isDark = document.body.classList.contains("dark");
+  $("themeToggle").textContent = isDark ? "☀️" : "🌙";
+  store.set("theme", isDark ? "dark" : "light");
+};
+
+/* ============================================================
+   Авторизация
+============================================================ */
+document.querySelectorAll(".auth-tab").forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".auth-form").forEach(f => f.classList.remove("active"));
+    tab.classList.add("active");
+    $(tab.dataset.tab + "Form").classList.add("active");
+  };
+});
+
+$("loginForm").onsubmit = (e) => {
+  e.preventDefault();
+  const email = $("loginEmail").value.trim();
+  const pwd = $("loginPassword").value;
+  const role = $("loginRole").value;
+  if (!email || pwd.length < 4) { toast("Проверьте email и пароль", "danger"); return; }
+  const user = { name: email.split("@")[0], email, role };
+  localStorage.setItem("ua_session", JSON.stringify(user));
+  startApp(user);
+};
+
+$("registerForm").onsubmit = (e) => {
+  e.preventDefault();
+  const name = $("regName").value.trim();
+  const email = $("regEmail").value.trim();
+  const pwd = $("regPassword").value;
+  const role = $("regRole").value;
+  if (!name || !email || pwd.length < 4) { toast("Заполните все поля", "danger"); return; }
+  const user = { name, email, role };
+  localStorage.setItem("ua_session", JSON.stringify(user));
+  toast("Регистрация успешна!", "ok");
+  startApp(user);
+};
+
+$("userBtn").onclick = () => {
+  if (confirm("Выйти из аккаунта?")) {
+    localStorage.removeItem("ua_session");
+    location.reload();
+  }
+};
+
+function startApp(user) {
+  $("authScreen").classList.add("hidden");
+  $("app").style.display = "block";
+  $("userInitial").textContent = (user.name || user.email)[0].toUpperCase();
+  document.querySelectorAll(".role-switch button").forEach(b => {
+    b.classList.toggle("active", b.dataset.role === user.role);
+  });
+  document.querySelectorAll(".role-panel").forEach(p => {
+    p.classList.toggle("active", p.id === user.role);
+  });
+}
+
+/* ============================================================
+   Переключение ролей
+============================================================ */
+document.querySelectorAll("#roleSwitch button").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll("#roleSwitch button").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".role-panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    $(btn.dataset.role).classList.add("active");
+    if (btn.dataset.role === "dispatcher") drawSpeedChart();
+    if (btn.dataset.role === "passenger") renderSchedule();
+    if (btn.dataset.role === "cargo") renderCargo();
+  };
+});
+
+/* ============================================================
+   Данные судов
+============================================================ */
+const baseShips = [
+  { id: "Волна-3",  x: 20, y: 30, status: "conflict", speed: 12, course: 48,  cap: 34, capMax: 60, type: "пассажирское" },
+  { id: "Сокол-1",  x: 45, y: 40, status: "conflict", speed: 14, course: 220, cap: 48, capMax: 60, type: "пассажирское" },
+  { id: "Бриз-2",   x: 70, y: 25, status: "ok",       speed: 10, course: 90,  cap: 22, capMax: 40, type: "пассажирское" },
+  { id: "Штиль-5",  x: 35, y: 70, status: "queue",    speed: 0,  course: 15,  cap: 12, capMax: 20, type: "грузовое" },
+  { id: "Заря-7",   x: 80, y: 65, status: "ok",       speed: 11, course: 180, cap: 30, capMax: 50, type: "пассажирское" },
+  { id: "Нептун-4", x: 55, y: 80, status: "queue",    speed: 2,  course: 300, cap: 18, capMax: 25, type: "грузовое" }
+];
+let ships = baseShips.map(s => ({ ...s }));
+
+const statusLabel = (s) => s === "conflict" ? "Конфликт" : s === "queue" ? "Ожидание" : "В норме";
+const statusClass = (s) => s === "conflict" ? "danger" : s === "queue" ? "warn" : "ok";
+
+function renderShips() {
+  const map = $("dispatcherMap");
+  map.innerHTML = "";
+  ships.forEach(s => {
+    const el = document.createElement("div");
+    el.className = "ship" + (s.status === "conflict" ? " conflict" : "");
+    el.style.left = s.x + "%";
+    el.style.top  = s.y + "%";
+    el.textContent = s.type === "грузовое" ? "🚢" : "⛵";
+    el.onclick = () => showShipModal(s);
+    map.appendChild(el);
+  });
+}
+
+function renderCaptainMap() {
+  const map = $("captainMap");
+  map.innerHTML = "";
+  const list = [
+    { id: "Вы",      x: 30, y: 50, status: "ok" },
+    { id: "Сокол-1", x: 55, y: 45, status: "conflict" },
+    { id: "Бриз-2",  x: 75, y: 30, status: "ok" }
+  ];
+  list.forEach(s => {
+    const el = document.createElement("div");
+    el.className = "ship" + (s.status === "conflict" ? " conflict" : "");
+    el.style.left = s.x + "%";
+    el.style.top  = s.y + "%";
+    el.textContent = s.id === "Вы" ? "🚢" : "⛵";
+    el.title = s.id;
+    map.appendChild(el);
+  });
+}
+
+function showShipModal(s) {
+  $("modalContent").innerHTML = `
+    <h3>🚢 ${s.id}</h3>
+    <div class="row"><span>Тип</span><b>${s.type}</b></div>
+    <div class="row"><span>Курс</span><b>${s.course}°</b></div>
+    <div class="row"><span>Скорость</span><b>${s.speed} км/ч</b></div>
+    <div class="row"><span>Статус</span><b>${statusLabel(s.status)}</b></div>
+    <div class="row"><span>Заполняемость</span><b>${s.cap} / ${s.capMax}</b></div>
+    <button class="action mt" style="width:100%" onclick="closeModal()">Закрыть</button>
+  `;
+  $("modalOverlay").classList.add("active");
+}
+
+/* ============================================================
+   Мониторинг
+============================================================ */
+function renderMonitor() {
+  const search = ($("monitorSearch")?.value || "").toLowerCase();
+  const st = $("monitorStatus")?.value || "";
+  const tbody = $("monitorTable");
+  tbody.innerHTML = "";
+  ships
+    .filter(s => (!search || s.id.toLowerCase().includes(search)) && (!st || s.status === st))
+    .forEach(s => {
+      tbody.innerHTML += `<tr>
+        <td><b>${s.id}</b></td>
+        <td>${s.course}°</td>
+        <td>${s.speed} км/ч</td>
+        <td><span class="badge ${statusClass(s.status)}">${statusLabel(s.status)}</span></td>
+      </tr>`;
+    });
+}
+$("monitorSearch").oninput = renderMonitor;
+$("monitorStatus").onchange = renderMonitor;
+
+/* ============================================================
+   Конфликты
+============================================================ */
+const conflicts = [
+  { a: "Волна-3", b: "Сокол-1", dist: "180 м", risk: "Высокий" },
+  { a: "Бриз-2",  b: "Заря-7",  dist: "420 м", risk: "Средний" },
+  { a: "Штиль-5", b: "Нептун-4",dist: "260 м", risk: "Средний" }
+];
+function renderConflicts() {
+  const tbody = $("conflictTable");
+  tbody.innerHTML = "";
+  conflicts.forEach(c => {
+    const cls = c.risk === "Высокий" ? "danger" : "warn";
+    tbody.innerHTML += `<tr>
+      <td>${c.a}</td><td>${c.b}</td><td>${c.dist}</td>
+      <td><span class="badge ${cls}">${c.risk}</span></td>
+    </tr>`;
+  });
+  $("conflictAIList").innerHTML = `
+    <li><b>Вариант 1:</b> Снизить скорость «Волны-3» до 8 км/ч — задержка 4 мин.</li>
+    <li><b>Вариант 2:</b> Изменить курс «Сокола-1» на 15° вправо — задержка 2 мин.</li>
+    <li><b>Вариант 3:</b> Задержать «Волну-3» у причала №4 на 6 мин — нулевой риск.</li>
+    <li class="mt"><b>Рекомендация ИИ:</b> Вариант 2 — минимальные потери при высоком уровне безопасности.</li>
+  `;
+}
+
+/* ============================================================
+   Заполняемость
+============================================================ */
+function renderCapacity() {
+  const list = $("capacityList");
+  list.innerHTML = "";
+  ships.forEach(s => {
+    const pct = Math.round(s.cap / s.capMax * 100);
+    const cls = pct >= 90 ? "full" : pct >= 70 ? "high" : "";
+    list.innerHTML += `
+      <div style="margin-bottom:14px;">
+        <div class="flex" style="justify-content:space-between;">
+          <b>${s.id}</b><span class="muted">${s.cap} / ${s.capMax} (${pct}%)</span>
+        </div>
+        <div class="capacity-bar">
+          <div class="capacity-fill ${cls}" style="width:${pct}%">${pct >= 15 ? pct + "%" : ""}</div>
+        </div>
+      </div>`;
+  });
+}
+
+/* ============================================================
+   Капитан
+============================================================ */
+function renderCaptain() {
+  renderCaptainMap();
+  $("captainStats").innerHTML = `
+    <tr><td>Скорость</td><td><b>12 км/ч</b></td></tr>
+    <tr><td>Курс</td><td><b>48° (СВ)</b></td></tr>
+    <tr><td>Топливо</td><td><b>78%</b></td></tr>
+    <tr><td>Осадка</td><td><b>1.2 м</b></td></tr>
+    <tr><td>Двигатель</td><td><span class="badge ok">Норма</span></td></tr>
+  `;
+  const pct = 34 / 60 * 100;
+  $("captainCapacity").innerHTML = `
+    <div class="flex" style="justify-content:space-between;">
+      <b>Пассажиры</b><span class="muted">34 / 60 (${Math.round(pct)}%)</span>
+    </div>
+    <div class="capacity-bar"><div class="capacity-fill" style="width:${pct}%">${Math.round(pct)}%</div></div>
+    <div class="flex mt" style="justify-content:space-between;">
+      <b>Груз</b><span class="muted">2.4 / 5 т (48%)</span>
+    </div>
+    <div class="capacity-bar"><div class="capacity-fill" style="width:48%">48%</div></div>
+  `;
+  $("captainNotices").innerHTML = `
+    <div class="notice danger">Опасное сближение с судном «Сокол-1» — 180 м.</div>
+    <div class="notice warn">Шлюз №2: очередь 2 судна, ожидание ~12 мин.</div>
+    <div class="notice info">Прогноз: через 3 часа усиление ветра до 7 м/с.</div>
+  `;
+  $("captainAIList").innerHTML = `
+    <li>Снизить скорость до 9 км/ч — снимет конфликт с «Соколом-1».</li>
+    <li>Запросить слот на шлюз №2 — сэкономит 6 мин.</li>
+    <li>Проверить топливо — хватит на 4 ч 20 мин.</li>
+  `;
+}
+
+/* ============================================================
+   Пассажир
+============================================================ */
+const scheduleData = [
+  { num: "R-204", from: "Причал №4", to: "Причал №7", dep: "10:30", arr: "11:50", seats: 12, price: 450, date: "28.09.2026" },
+  { num: "R-208", from: "Причал №7", to: "Причал №4", dep: "18:00", arr: "19:20", seats: 5,  price: 450, date: "28.09.2026" },
+  { num: "R-212", from: "Причал №4", to: "Причал №9", dep: "14:15", arr: "15:40", seats: 0,  price: 600, date: "28.09.2026" },
+  { num: "R-216", from: "Причал №9", to: "Причал №4", dep: "20:30", arr: "21:55", seats: 18, price: 600, date: "29.09.2026" },
+  { num: "R-220", from: "Причал №4", to: "Причал №12",dep: "08:00", arr: "09:35", seats: 24, price: 700, date: "29.09.2026" }
+];
+let myTickets = store.get("tickets", []);
+
+function renderSchedule() {
+  const search = ($("schedSearch")?.value || "").toLowerCase();
+  const sort = $("schedSort")?.value || "dep";
+  let list = scheduleData.filter(r =>
+    !search || r.from.toLowerCase().includes(search)
+            || r.to.toLowerCase().includes(search)
+            || r.num.toLowerCase().includes(search));
+  if (sort === "seats") list = [...list].sort((a, b) => b.seats - a.seats);
+  else if (sort === "price") list = [...list].sort((a, b) => a.price - b.price);
+  else list = [...list].sort((a, b) => a.dep.localeCompare(b.dep));
+
+  const tbody = $("scheduleBody");
+  tbody.innerHTML = "";
+  list.forEach(r => {
+    const seatsBadge = r.seats === 0
+      ? '<span class="badge danger">Нет мест</span>'
+      : r.seats < 10
+        ? `<span class="badge warn">${r.seats} мест</span>`
+        : `<span class="badge ok">${r.seats} мест</span>`;
+    const btn = r.seats === 0
+      ? '<button class="action small" disabled>Купить</button>'
+      : `<button class="action small" onclick="App.buyTicket('${r.num}')">Купить</button>`;
+    tbody.innerHTML += `<tr>
+      <td><b>${r.num}</b></td>
+      <td>${r.from}</td><td>${r.to}</td>
+      <td>${r.dep}</td><td>${r.arr}</td>
+      <td>${seatsBadge}</td>
+      <td><b>${r.price} ₽</b></td>
+      <td>${btn}</td>
+    </tr>`;
+  });
+}
+$("schedSearch").oninput = renderSchedule;
+$("schedSort").onchange = renderSchedule;
+
+function renderMyTickets() {
+  const tbody = $("myTickets");
+  const noT = $("noTickets");
+  if (myTickets.length === 0) { tbody.innerHTML = ""; noT.style.display = "block"; return; }
+  noT.style.display = "none";
+  tbody.innerHTML = "";
+  myTickets.forEach((t, i) => {
+    const badge = t.status === "ok"
+      ? '<span class="badge ok">Подтверждён</span>'
+      : t.status === "delayed"
+        ? '<span class="badge warn">Задержка</span>'
+        : '<span class="badge danger">Отменён</span>';
+    const action = t.status === "cancelled"
+      ? '<span class="muted">—</span>'
+      : `<button class="action small ghost" onclick="App.cancelTicket(${i})">Отменить</button>
+         <button class="action small ghost" onclick="App.moveTicket(${i})">Перенести</button>`;
+    tbody.innerHTML += `<tr>
+      <td><b>${t.num}</b></td>
+      <td>${t.from} → ${t.to}</td>
+      <td>${t.date}</td>
+      <td>${t.dep}</td>
+      <td>${badge}</td>
+      <td>${action}</td>
+    </tr>`;
+  });
+}
+
+function buyTicket(num) {
+  const r = scheduleData.find(x => x.num === num);
+  if (!r || r.seats === 0) return;
+  r.seats--;
+  myTickets.push({ ...r, status: "ok", qr: "T" + Math.floor(Math.random() * 900000 + 100000) });
+  store.set("tickets", myTickets);
+  renderSchedule();
+  renderMyTickets();
+  $("modalContent").innerHTML = `
+    <h3>🎫 Билет оформлен</h3>
+    <div class="qr"></div>
+    <div class="row"><span>Рейс</span><b>${r.num}</b></div>
+    <div class="row"><span>Маршрут</span><b>${r.from} → ${r.to}</b></div>
+    <div class="row"><span>Дата</span><b>${r.date}</b></div>
+    <div class="row"><span>Отправление</span><b>${r.dep}</b></div>
+    <div class="row"><span>Цена</span><b>${r.price} ₽</b></div>
+    <button class="action mt" style="width:100%" onclick="closeModal()">Готово</button>
+  `;
+  $("modalOverlay").classList.add("active");
+  toast(`Билет на рейс ${num} оформлен!`, "ok");
+}
+
+function cancelTicket(i) {
+  if (!confirm("Отменить билет?")) return;
+  myTickets[i].status = "cancelled";
+  store.set("tickets", myTickets);
+  renderMyTickets();
+  toast("Билет отменён", "warn");
+}
+function moveTicket(i) {
+  const t = myTickets[i];
+  const newDate = prompt("Новая дата (ДД.ММ.ГГГГ):", t.date);
+  if (newDate) {
+    t.date = newDate;
+    store.set("tickets", myTickets);
+    renderMyTickets();
+    toast("Билет перенесён на " + newDate, "ok");
+  }
+}
+
+/* ============================================================
+   Груз
+============================================================ */
+let cargoRequests = store.get("cargo", []);
+
+function submitCargo() {
+  const type = $("cargoType").value;
+  const weight = parseFloat($("cargoWeight").value);
+  const from = $("cargoFrom").value.trim();
+  const to = $("cargoTo").value.trim();
+  const date = $("cargoDate").value;
+  const phone = $("cargoPhone").value.trim();
+
+  if (!weight || weight <= 0) { toast("Укажите вес", "danger"); return; }
+  if (!from) { toast("Укажите откуда", "danger"); return; }
+  if (!to) { toast("Укажите куда", "danger"); return; }
+  if (!date) { toast("Укажите дату", "danger"); return; }
+  if (!phone) { toast("Укажите телефон", "danger"); return; }
+
+  const id = "#" + (1027 + cargoRequests.length);
+  cargoRequests.push({ id, type, weight, from, to, date, phone, status: "new" });
+  store.set("cargo", cargoRequests);
+  renderCargo();
+  toast(`Заявка ${id} отправлена!`, "ok");
+  ["cargoWeight","cargoFrom","cargoTo","cargoDate","cargoPhone"].forEach(k => $(k).value = "");
+}
+
+function renderCargo() {
+  const demo = [
+    { id: "#1024", type: "Контейнеры", ship: "«Волна-3»", status: "В пути", cls: "info", pct: 65 },
+    { id: "#1025", type: "Стройматериалы", ship: "«Сокол-1»", status: "Ожидает шлюз", cls: "warn", pct: 40 },
+    { id: "#1026", type: "Продукты", ship: "—", status: "Доставлено", cls: "ok", pct: 100 }
+  ];
+  const all = [...demo, ...cargoRequests.map(c => ({
+    id: c.id, type: c.type, ship: "—", status: "Обрабатывается", cls: "info", pct: 10
+  }))];
+  const track = $("cargoTrackTable");
+  track.innerHTML = "";
+  all.forEach(c => {
+    track.innerHTML += `<tr>
+      <td><b>${c.id}</b></td><td>${c.type}</td><td>${c.ship}</td>
+      <td><span class="badge ${c.cls}">${c.status}</span></td>
+      <td><div class="capacity-bar" style="height:14px;"><div class="capacity-fill" style="width:${c.pct}%;font-size:.65rem;">${c.pct}%</div></div></td>
+    </tr>`;
+  });
+  $("cargoAIList").innerHTML = `
+    <li>Заявка #1024 прибудет на Причал №7 в 15:40 (±15 мин).</li>
+    <li>Заявка #1025 задержится на 25 мин из-за очереди на шлюзе.</li>
+    <li>Рекомендуем отправить #1024 через «Бриз-2» — экономия 20 мин.</li>
+  `;
+  const my = $("myCargoTable");
+  const noC = $("noCargo");
+  if (cargoRequests.length === 0) { my.innerHTML = ""; noC.style.display = "block"; return; }
+  noC.style.display = "none";
+  my.innerHTML = "";
+  cargoRequests.forEach(c => {
+    my.innerHTML += `<tr>
+      <td><b>${c.id}</b></td><td>${c.type}</td><td>${c.weight} т</td>
+      <td>${c.from} → ${c.to}</td><td>${c.date}</td>
+      <td><span class="badge info">Обрабатывается</span></td>
+    </tr>`;
+  });
+}
+
+/* ============================================================
+   🤖 ЦЕНТР СВЯЗИ С ИИ-КАПИТАНАМИ (OpenAI)
+============================================================ */
+const AI = (() => {
+  const KEY_STORAGE = "openai_key";
+  const MODEL_STORAGE = "openai_model";
+  const CONV_STORAGE = "ai_conversations_v1";
+
+  const captains = [
+    { id: "volna3",  name: "Волна-3",  avatar: "В", status: "online",  shipStatus: "conflict", role: "пассажирское судно, 60 мест, 12 км/ч, курс 48°" },
+    { id: "sokol1",  name: "Сокол-1",  avatar: "С", status: "online",  shipStatus: "conflict", role: "пассажирское судно, 60 мест, 14 км/ч, курс 220°" },
+    { id: "briz2",   name: "Бриз-2",   avatar: "Б", status: "online",  shipStatus: "ok",       role: "пассажирское судно, 40 мест, 10 км/ч, курс 90°" },
+    { id: "shtil5",  name: "Штиль-5",  avatar: "Ш", status: "busy",    shipStatus: "queue",    role: "грузовое судно, 20 тонн, стоит у шлюза №2" },
+    { id: "zarya7",  name: "Заря-7",   avatar: "З", status: "online",  shipStatus: "ok",       role: "пассажирское судно, 50 мест, 11 км/ч, курс 180°" },
+    { id: "neptun4", name: "Нептун-4", avatar: "Н", status: "offline", shipStatus: "queue",    role: "грузовое судно, 25 тонн, у причала №4" }
+  ];
+
+  let conversations = store.get(CONV_STORAGE, {});
+  let activeCaptain = "volna3";
+  let unreadCounts = {};
+
+  const quickTemplates = [
+    "Уступите фарватер",
+    "Снизьте скорость до 8 км/ч",
+    "Займите причал №4",
+    "Ожидайте у шлюза №2",
+    "Подтвердите курс и скорость",
+    "Доложите обстановку",
+    "🚨 Экстренно: остановитесь"
+  ];
+
+  const getKey = () => localStorage.getItem(KEY_STORAGE) || "";
+  const getModel = () => localStorage.getItem(MODEL_STORAGE) || "gpt-4o-mini";
+
+  function openSettings() {
+    $("apiKeyInput").value = getKey();
+    $("apiModelSelect").value = getModel();
+    $("apiModal").classList.add("active");
+  }
+  function closeSettings() { $("apiModal").classList.remove("active"); }
+  function saveSettings() {
+    localStorage.setItem(KEY_STORAGE, $("apiKeyInput").value.trim());
+    localStorage.setItem(MODEL_STORAGE, $("apiModelSelect").value);
+    $("aiModel").textContent = getModel();
+    closeSettings();
+    toast("Настройки сохранены", "ok");
+  }
+  $("apiModal").onclick = (e) => { if (e.target.id === "apiModal") closeSettings(); };
+
+  function systemPrompt(c) {
+    return `Ты — капитан маломерного речного судна «${c.name}» на платформе «Умная авиация».
+Характеристики судна: ${c.role}.
+Статус: ${c.shipStatus === "conflict" ? "⚠️ конфликт курса" : c.shipStatus === "queue" ? "⏳ ожидание шлюза" : "✅ в норме"}.
+Диспетчер управляет движением и даёт приказы.
+
+ПРАВИЛА:
+- Отвечай кратко (1–2 предложения), как капитан по радиосвязи.
+- Используй морскую лексику: «принято», «выполняю», «курс», «фарватер», «следую», «докладываю».
+- На экстренные приказы: «Принято! Выполняю немедленно».
+- Иногда добавляй данные: скорость, курс, дистанцию.
+- Никогда не упоминай, что ты ИИ или модель.
+- Не выходи из роли.`;
+  }
+
+  async function askOpenAI(captain, history) {
+    const key = getKey();
+    if (!key) return { ok: false, error: "no-key" };
+
+    const messages = [
+      { role: "system", content: systemPrompt(captain) },
+      ...history.slice(-10).map(m => ({
+        role: m.mine ? "user" : "assistant",
+        content: m.text
+      }))
+    ];
+
+    try {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + key
+        },
+        body: JSON.stringify({
+          model: getModel(),
+          messages,
+          temperature: 0.8,
+          max_tokens: 120
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        return { ok: false, error: err?.error?.message || ("HTTP " + res.status) };
+      }
+      const data = await res.json();
+      const text = data?.choices?.[0]?.message?.content?.trim();
+      return text ? { ok: true, text } : { ok: false, error: "Пустой ответ" };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  function demoReply(captain, userText) {
+    const t = userText.toLowerCase();
+    if (t.includes("экстрен") || t.includes("останов")) return "Принято! Останавливаюсь немедленно.";
+    if (t.includes("скорост")) return "Принято, снижаю скорость до 8 км/ч.";
+    if (t.includes("фарватер")) return "Принято, уступаю фарватер.";
+    if (t.includes("причал")) return "Принято, следую к причалу.";
+    if (t.includes("доложи")) return "Докладываю: скорость 12 км/ч, курс 48°, всё в норме.";
+    if (t.includes("обстановк")) return "Обстановка спокойная, других судов рядом нет.";
+    return "Принято.";
+  }
+
+  function save() { store.set(CONV_STORAGE, conversations); }
+
+  function recalcUnread() {
+    unreadCounts = {};
+    captains.forEach(c => {
+      const list = conversations[c.id] || [];
+      unreadCounts[c.id] = list.filter(m => !m.mine && !m.read).length;
+    });
+  }
+
+  function renderList() {
+    const search = ($("captainSearch")?.value || "").toLowerCase();
+    const box = $("captainList");
+    if (!box) return;
+    const filtered = captains.filter(c => !search || c.name.toLowerCase().includes(search));
+    box.innerHTML = "";
+    filtered.forEach(c => {
+      const list = conversations[c.id] || [];
+      const last = list[list.length - 1];
+      const lastText = last ? last.text.slice(0, 28) + (last.text.length > 28 ? "…" : "") : "Нет сообщений";
+      const unread = unreadCounts[c.id] || 0;
+      const dot = c.status === "online" ? "online" : c.status === "busy" ? "busy" : "offline";
+      box.innerHTML += `
+        <div class="comm-item ${c.id === activeCaptain ? "active" : ""}" onclick="AI.selectCaptain('${c.id}')">
+          <div class="avatar">${c.avatar}<span class="dot ${dot}"></span></div>
+          <div class="info">
+            <div class="name">${c.name}</div>
+            <div class="last">${lastText}</div>
+          </div>
+          ${unread ? `<div class="unread">${unread}</div>` : ""}
+        </div>`;
+    });
+    const online = captains.filter(c => c.status === "online" || c.status === "busy").length;
+    $("onlineCount").textContent = online;
+    $("totalCount").textContent = captains.length;
+  }
+
+  function selectCaptain(id) {
+    activeCaptain = id;
+    const c = captains.find(x => x.id === id);
+    if (conversations[id]) {
+      conversations[id].forEach(m => { if (!m.mine) m.read = true; });
+      save();
+    }
+    recalcUnread();
+    $("commAvatar").textContent = c.avatar;
+    $("commName").textContent = "Капитан «" + c.name + "»";
+    const st = c.status === "online" ? "🟢 Онлайн" : c.status === "busy" ? "🟠 Занят" : "⚪ Офлайн";
+    const ship = c.shipStatus === "conflict" ? "· ⚠️ Конфликт курса" : c.shipStatus === "queue" ? "· ⏳ Ожидание шлюза" : "· ✅ В норме";
+    $("commStatus").textContent = st + " " + ship;
+    renderList();
+    renderChat();
+  }
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, ch => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[ch]);
+
+  function renderChat() {
+    const box = $("chatBox");
+    if (!box) return;
+    const list = conversations[activeCaptain] || [];
+    if (list.length === 0) {
+      box.innerHTML = '<div class="empty-chat">Начните диалог — ИИ-капитан ответит 👇</div>';
+      return;
+    }
+    box.innerHTML = "";
+    list.forEach(m => {
+      const prioCls = m.priority === "urgent" ? "prio-urgent" : m.priority === "important" ? "prio-important" : "";
+      const ticks = m.mine ? `<div class="msg-ticks">${m.read ? "✓✓ прочитано" : "✓ отправлено"}</div>` : "";
+      box.innerHTML += `
+        <div class="msg-wrap ${m.mine ? "mine" : "theirs"}">
+          <div class="msg-meta"><b>${m.from}</b> · ${m.time}</div>
+          <div class="msg-bubble ${prioCls}">${esc(m.text)}</div>
+          ${ticks}
+        </div>`;
+    });
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function renderTemplates() {
+    const box = $("quickTemplates");
+    if (!box) return;
+    box.innerHTML = quickTemplates.map(t =>
+      `<button class="tpl-btn" onclick="AI.useTemplate('${t.replace(/'/g, "\\'")}')">${t}</button>`
+    ).join("");
+  }
+  function useTemplate(t) { $("chatInput").value = t; $("chatInput").focus(); }
+
+  const now = () => {
+    const d = new Date();
+    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  };
+
+  async function send() {
+    const input = $("chatInput");
+    const text = input.value.trim();
+    if (!text) return;
+
+    const priority = document.querySelector('input[name="priority"]:checked')?.value || "normal";
+
+    if (!conversations[activeCaptain]) conversations[activeCaptain] = [];
+    conversations[activeCaptain].push({
+      from: "Диспетчер", text, time: now(),
+      priority, mine: true, read: false
+    });
+    save();
+    input.value = "";
+    renderChat();
+    renderList();
+
+    if (!$("aiAutoReply")?.checked) return;
+
+    const captain = captains.find(c => c.id === activeCaptain);
+    const typing = $("aiTyping");
+    typing.style.display = "block";
+
+    const result = await askOpenAI(captain, conversations[activeCaptain]);
+    let reply, isDemo = false;
+    if (result.ok) {
+      reply = result.text;
+    } else {
+      reply = demoReply(captain, text);
+      isDemo = true;
+      if (result.error === "no-key") {
+        toast("⚙️ Введите OpenAI API-ключ — сейчас демо-режим", "info", 4000);
+      } else if (result.error) {
+        toast("OpenAI: " + result.error, "danger", 5000);
+      }
+    }
+    typing.style.display = "none";
+
+    conversations[activeCaptain].push({
+      from: "Капитан «" + captain.name + "»" + (isDemo ? " (демо)" : ""),
+      text: reply, time: now(),
+      priority: "normal", mine: false, read: true
+    });
+    save();
+    renderChat();
+    renderList();
+
+    conversations[activeCaptain].forEach(m => { if (m.mine) m.read = true; });
+    save();
+    renderChat();
+
+    if (priority === "urgent") {
+      toast("🚨 Экстренное сообщение доставлено", "danger", 5000);
+      beep();
+    }
+  }
+
+  async function broadcast() {
+    const text = prompt("Сообщение всем капитанам:");
+    if (!text) return;
+    const priority = document.querySelector('input[name="priority"]:checked')?.value || "normal";
+
+    for (const c of captains) {
+      if (!conversations[c.id]) conversations[c.id] = [];
+      conversations[c.id].push({
+        from: "Диспетчер (всем)", text, time: now(),
+        priority, mine: true, read: false
+      });
+
+      if ($("aiAutoReply")?.checked && c.status !== "offline") {
+        const result = await askOpenAI(c, conversations[c.id]);
+        const reply = result.ok ? result.text : demoReply(c, text);
+        conversations[c.id].push({
+          from: "Капитан «" + c.name + "»",
+          text: reply, time: now(),
+          priority: "normal", mine: false, read: false
+        });
+      }
+    }
+    save();
+    recalcUnread();
+    renderList();
+    renderChat();
+    toast("📢 Сообщение отправлено всем", "ok");
+  }
+
+  function beep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = 880; g.gain.value = 0.08;
+      o.connect(g); g.connect(ctx.destination);
+      o.start();
+      setTimeout(() => o.stop(), 180);
+    } catch (e) {}
+  }
+
+  function init() {
+    $("aiModel").textContent = getModel();
+    $("chatInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); send(); }
+    });
+    $("captainSearch")?.addEventListener("input", renderList);
+    recalcUnread();
+    renderList();
+    renderTemplates();
+    selectCaptain("volna3");
+  }
+
+  return { init, send, selectCaptain, useTemplate, broadcast, openSettings, closeSettings, saveSettings };
+})();
+
+/* ============================================================
+   График скорости
+============================================================ */
+let speedHistory = [10, 11, 12, 13, 12, 11, 12, 13, 14, 12, 11, 10, 12, 13];
+function drawSpeedChart() {
+  const canvas = $("speedChart");
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, w, h);
+  const max = Math.max(...speedHistory, 1), min = Math.min(...speedHistory);
+  const range = max - min || 1;
+  const step = w / (speedHistory.length - 1);
+
+  ctx.strokeStyle = "rgba(0,150,199,0.15)";
+  for (let i = 0; i <= 4; i++) {
+    const y = (h / 4) * i;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+  ctx.beginPath();
+  speedHistory.forEach((v, i) => {
+    const x = i * step;
+    const y = h - ((v - min) / range) * (h - 20) - 10;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = "#0096c7"; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, "rgba(0,150,199,0.3)");
+  grad.addColorStop(1, "rgba(0,150,199,0)");
+  ctx.fillStyle = grad; ctx.fill();
+}
+window.addEventListener("resize", drawSpeedChart);
+
+/* ============================================================
+   Симуляция
+============================================================ */
+function simulate() {
+  ships.forEach(s => {
+    s.x += (Math.random() - 0.5) * 6;
+    s.y += (Math.random() - 0.5) * 6;
+    s.x = Math.max(5, Math.min(95, s.x));
+    s.y = Math.max(5, Math.min(95, s.y));
+    if (s.status === "conflict") s.speed = Math.max(6, s.speed + (Math.random() - 0.5) * 2);
+    if (s.status === "queue") s.speed = 0;
+    s.speed = +s.speed.toFixed(1);
+    if (s.id === "Волна-3") {
+      speedHistory.push(s.speed);
+      if (speedHistory.length > 20) speedHistory.shift();
+    }
+  });
+  renderShips();
+  renderMonitor();
+  renderCapacity();
+  if (document.querySelector("#dispatcher.active")) drawSpeedChart();
+
+  const upd = (id, val) => {
+    const el = $(id);
+    if (el.textContent !== String(val)) {
+      el.textContent = val;
+      el.classList.add("flash");
+      setTimeout(() => el.classList.remove("flash"), 600);
+    }
+  };
+  upd("kpiShips", ships.length);
+  upd("kpiConflicts", ships.filter(s => s.status === "conflict").length);
+  upd("kpiQueue", ships.filter(s => s.status === "queue").length);
+  upd("kpiAlerts", conflicts.filter(c => c.risk === "Высокий").length);
+}
+
+/* ============================================================
+   Инициализация
+============================================================ */
+renderShips();
+renderMonitor();
+renderConflicts();
+renderCapacity();
+renderCaptain();
+renderSchedule();
+renderMyTickets();
+renderCargo();
+AI.init();
+setTimeout(drawSpeedChart, 100);
+setInterval(simulate, 3000);
+
+setTimeout(() => {
+  toast("⚠️ Рейс R-212 отменён. Пассажиры могут перенести билет без доплаты.", "warn", 6000);
+  const pn = $("passengerNotices");
+  if (pn) pn.insertAdjacentHTML("afterbegin", '<div class="notice danger">Рейс R-212 отменён. Можно перенести билет без доплаты.</div>');
+}, 8000);
+
+setTimeout(() => toast("🚢 «Штиль-5» прошёл шлюз №2", "ok", 4000), 15000);
+
+/* Автовход */
+const savedUser = (() => {
+  try { return JSON.parse(localStorage.getItem("ua_session")); } catch { return null; }
+})();
+if (savedUser) startApp(savedUser);
+
+/* Экспорт для HTML-кнопок */
+const App = {
+  buyTicket,
+  cancelTicket,
+  moveTicket,
+  submitCargo,
+  showShipModal,
+  sendChat: () => AI.send(),
+  broadcastMessage: () => AI.broadcast()
+};
+window.App = App;
+</script>
+
+</body>
+</html>
